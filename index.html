@@ -1,0 +1,1849 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shiva AI</title>
+<script src="https://unpkg.com/@phosphor-icons/web"></script>
+<link rel="icon" type="image/x-icon" href="shiva.png">
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family: "Inter", "Segoe UI", sans-serif;
+}
+
+body{
+    height:100vh;
+    background:#0d0d0f;
+    color:white;
+    overflow:hidden;
+    transition:background .25s ease, color .25s ease;
+}
+
+body.light-theme{
+    background:#f5f5f5;
+    color:#111;
+}
+
+body.light-theme .search{
+    background:#ffffff;
+    color:#111;
+    box-shadow:0 10px 30px rgba(0,0,0,.12);
+}
+
+body.light-theme .search input,
+body.light-theme .search input::placeholder,
+body.light-theme .mode-btn,
+body.light-theme .plus,
+body.light-theme .settings,
+body.light-theme .side-icon,
+body.light-theme .setting-item,
+body.light-theme .theme-option,
+body.light-theme .model-item h3,
+body.light-theme .model-item p{
+    color:#111;
+}
+
+body.light-theme .settings-panel,
+body.light-theme .model-menu,
+body.light-theme .theme-menu{
+    background:#ffffff;
+    color:#111;
+    border-color:rgba(0,0,0,.08);
+}
+
+body.light-theme .theme-option:hover,
+body.light-theme .setting-item:hover,
+body.light-theme .model-item:hover{
+    background:#f0f0f2;
+}
+
+body.light-theme .ai-message{
+    background:#e9e9ee;
+    color:#111;
+}
+
+body.light-theme .user-message{
+    background:#3b5cff;
+    color:white;
+}
+
+/* Center glow */
+body::before{
+    content:"";
+    position:absolute;
+    width:700px;
+    height:500px;
+    top:50%;
+    left:50%;
+    transform:translate(-50%,-50%);
+    background:radial-gradient(
+        circle,
+        rgba(42,63,150,0.35),
+        rgba(13,13,15,0) 70%
+    );
+    filter:blur(30px);
+}
+
+
+/* Sidebar */
+.sidebar{
+    position:fixed;
+    left:0;
+    top:0;
+    height:100%;
+    width:55px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding-top:18px;
+    gap:22px;
+}
+
+.logo{
+    font-size:22px;
+    color:#8aa4ff;
+}
+
+.icon{
+    width:22px;
+    height:22px;
+    color:#c7c7c7;
+    opacity:.8;
+    cursor:pointer;
+    transition:.3s;
+}
+
+.icon:hover{
+    color:white;
+    transform:scale(1.15);
+}
+.logo img{
+    width:28px;
+    height:28px;
+    object-fit:contain;
+}
+
+
+.side-icon{
+    position:relative;
+    width:28px;
+    height:28px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:#bdbdbd;
+    cursor:pointer;
+    font-size:22px;
+    transition:.25s;
+}
+
+
+.side-icon:hover{
+    color:white;
+    transform:scale(1.12);
+}
+
+
+/* Tooltip */
+
+.side-icon::after{
+
+content:attr(data-tooltip);
+
+position:absolute;
+
+left:42px;
+
+background:#222;
+
+padding:7px 12px;
+
+border-radius:8px;
+
+font-size:13px;
+
+white-space:nowrap;
+
+color:white;
+
+opacity:0;
+
+transform:translateX(-5px);
+
+pointer-events:none;
+
+transition:.2s;
+
+border:1px solid rgba(255,255,255,.08);
+
+}
+
+
+.side-icon:hover::after{
+
+opacity:1;
+
+transform:translateX(0);
+
+}
+
+/* Main */
+.container{
+
+height:100vh;
+
+display:flex;
+
+align-items:center;
+
+flex-direction:column;
+
+position:relative;
+
+z-index:2;
+
+transition:.5s ease;
+
+}
+
+
+
+.container.has-chat{
+
+justify-content:flex-end;
+
+padding-bottom:35px;
+
+}
+
+
+h1{
+    font-size:34px;
+    font-weight:500;
+    letter-spacing:-1px;
+    color:#e5e5e8;
+    margin-bottom:35px;
+}
+
+
+/* Search */
+.search{
+    width:530px;
+    height:55px;
+    background:#202023;
+    border-radius:30px;
+    display:flex;
+    align-items:center;
+    padding:0 18px;
+    box-shadow:
+    0 10px 40px rgba(0,0,0,.4),
+    inset 0 0 0 1px rgba(255,255,255,.03);
+}
+
+.plus{
+    font-size:28px;
+    color:#d8d8d8;
+    margin-right:15px;
+}
+
+input{
+    flex:1;
+    background:none;
+    border:none;
+    outline:none;
+    color:white;
+    font-size:16px;
+}
+
+input::placeholder{
+    color:#b5b5b5;
+}
+
+
+.mode{
+    margin-right:20px;
+    color:#ccc;
+    font-size:14px;
+}
+
+
+
+/* Settings Icon & Tooltip */
+.settings{
+    position:fixed;
+    bottom:65px;
+    left:18px;
+    font-size:20px;
+    color:#bbb;
+    cursor: pointer;
+    transition: .3s;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 22px;
+    height: 22px;
+}
+
+.settings:hover {
+    color: white;
+    transform: scale(1.15);
+}
+
+/* Settings Tooltip */
+.settings::after {
+    content: "Settings";
+    position: absolute;
+    left: 35px; /* Distance from the icon */
+    background: rgba(28, 28, 32, 0.95);
+    color: white;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 6px 10px;
+    border-radius: 6px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateX(10px);
+    transition: all 0.25s ease;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    z-index: 100;
+}
+
+.settings:hover::after {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+:root{
+    --menu-bg:#1b1b1f;
+    --card-hover:#29292e;
+    --text-main:#f1f1f1;
+    --text-muted:#9b9b9f;
+    --border:rgba(255,255,255,.08);
+}
+
+
+/* Model Button */
+.model-selector{
+    position:relative;
+}
+
+.mode-btn{
+    background:none;
+    border:none;
+    color:#ccc;
+    font-size:14px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:7px;
+    padding:8px 12px;
+    border-radius:20px;
+    transition:.3s;
+}
+
+.mode-btn:hover{
+    background:rgba(255,255,255,.08);
+}
+
+.arrow{
+    font-size:15px;
+}
+
+
+/* Dropdown */
+.model-menu{
+    position:absolute;
+    bottom:45px;
+    right:0;
+    width:280px;
+    background:var(--menu-bg);
+    border:1px solid var(--border);
+    border-radius:18px;
+    padding:10px;
+    box-shadow: 0 20px 50px rgba(0,0,0,.6);
+    opacity:0;
+    transform:translateY(10px) scale(.96);
+    pointer-events:none;
+    transition:.25s ease;
+}
+
+.model-menu.show{
+    opacity:1;
+    transform:translateY(0) scale(1);
+    pointer-events:auto;
+}
+
+
+/* Menu Items */
+.model-item{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:14px;
+    border-radius:14px;
+    cursor:pointer;
+    transition:.2s;
+}
+
+.model-item:hover{
+    background:var(--card-hover);
+}
+
+.model-item h3{
+    color:var(--text-main);
+    font-size:15px;
+    font-weight:500;
+}
+
+.model-item p{
+    color:var(--text-muted);
+    font-size:12px;
+    margin-top:4px;
+}
+
+.check{
+    color:#8aa4ff;
+    font-size:18px;
+}
+
+.model-item:not(.active) .check{
+    opacity:0;
+}
+
+/* SETTINGS PANEL */
+.settings-panel{
+    position:fixed;
+    left:65px;
+    bottom:55px;
+    width:260px;
+    background:rgba(28,28,32,.85);
+    backdrop-filter:blur(18px);
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:20px;
+    padding:10px;
+    box-shadow: 0 20px 60px rgba(0,0,0,.6);
+    opacity:0;
+    transform:translateX(-15px) scale(.96); /* slide out from sidebar */
+    pointer-events:none;
+    transition: all .3s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* bouncy entry */
+    z-index:20;
+}
+
+.settings-panel.active{
+    opacity:1;
+    transform:translateX(0) scale(1);
+    pointer-events:auto;
+}
+
+.setting-item{
+    height:48px;
+    display:flex;
+    align-items:center;
+    gap:14px;
+    padding:0 15px;
+    color:#ddd;
+    font-size:14px;
+    border-radius:14px;
+    cursor:pointer;
+    position:relative;
+    transition:.25s;
+}
+
+.setting-item:hover{
+    background:rgba(255,255,255,.08);
+}
+
+.setting-icon{
+    width:22px;
+    color:#aaa;
+    font-size:18px;
+}
+
+.right-arrow{
+    margin-left:auto;
+    color:#888;
+    font-size:22px;
+}
+
+
+
+.theme-option{
+
+height:40px;
+
+display:flex;
+
+align-items:center;
+
+padding:0 12px;
+
+border-radius:12px;
+
+font-size:14px;
+
+color:#eee;
+
+cursor:pointer;
+
+}
+
+
+
+.theme-option:hover{
+
+background:#303134;
+
+}
+.chat-container{
+    justify-content:flex-end;
+    padding-bottom:40px;
+}
+
+
+.chat-header{
+
+position:absolute;
+
+top:50%;
+
+transform:translateY(-50%);
+
+transition:.6s cubic-bezier(.2,.8,.2,1);
+
+}
+
+
+.has-chat .chat-header{
+
+top:25px;
+
+transform:none;
+
+}
+
+
+.chat-header h1{
+
+font-size:34px;
+
+font-weight:500;
+
+}
+
+
+.messages{
+    width:650px;
+    max-width:90%;
+    height:65vh;
+    overflow-y:auto;
+    display:flex;
+    flex-direction:column;
+    gap:15px;
+    padding:20px;
+}
+
+
+.message{
+    padding:14px 18px;
+    border-radius:18px;
+    max-width:75%;
+    line-height:1.5;
+    font-size:15px;
+}
+
+
+.ai-message{
+    background:#202023;
+    align-self:flex-start;
+}
+
+
+.user-message{
+    background:#3b5cff;
+    align-self:flex-end;
+}
+
+
+#sendBtn{
+    background:none;
+    border:none;
+    color:white;
+    font-size:22px;
+    cursor:pointer;
+    margin-right:10px;
+}
+
+
+.typing{
+    opacity:.7;
+    animation:pulse 1s infinite;
+}
+
+
+@keyframes pulse{
+
+50%{
+opacity:.3;
+}
+
+}
+.ai-message{
+    background:#202023;
+    color:#eee;
+    line-height:1.7;
+}
+
+
+.ai-message h1,
+.ai-message h2,
+.ai-message h3{
+    margin:12px 0;
+}
+
+
+.ai-message ul,
+.ai-message ol{
+    padding-left:25px;
+}
+
+
+.ai-message code{
+    background:#111;
+    padding:3px 6px;
+    border-radius:5px;
+}
+
+
+.ai-message pre{
+    background:#111;
+    padding:15px;
+    border-radius:12px;
+    overflow-x:auto;
+}
+.dots{
+animation:blink 1s infinite;
+}
+
+
+@keyframes blink{
+
+50%{
+opacity:.3;
+}
+
+}
+.messages{
+
+width:700px;
+
+max-width:90%;
+
+height:65vh;
+
+overflow-y:auto;
+
+display:flex;
+
+flex-direction:column;
+
+gap:18px;
+
+padding:20px;
+
+scroll-behavior:smooth;
+
+}
+
+
+.messages::-webkit-scrollbar{
+
+width:6px;
+
+}
+
+
+.messages::-webkit-scrollbar-thumb{
+
+background:#333;
+
+border-radius:20px;
+
+}
+#sendBtn{
+
+display:flex;
+
+align-items:center;
+
+justify-content:center;
+
+font-size:22px;
+
+}
+.settings{
+
+position:fixed;
+
+bottom:18px;
+
+left:15px;
+
+font-size:20px;
+
+color:#aaa;
+
+cursor:pointer;
+
+z-index:50;
+
+}
+
+
+
+.settings:hover{
+
+color:white;
+
+}
+
+
+
+/* Gemini style panel */
+
+
+.settings-panel{
+
+
+position:fixed;
+
+left:8px;
+
+bottom:55px;
+
+width:238px;
+
+background:#202124;
+
+border-radius:22px;
+
+padding:8px;
+
+box-shadow:
+
+0 15px 50px rgba(0,0,0,.7);
+
+
+opacity:0;
+
+transform:
+
+translateY(20px)
+
+scale(.95);
+
+
+pointer-events:none;
+
+
+transition:.25s ease;
+
+
+z-index:40;
+
+overflow:hidden;
+
+}
+
+
+
+.settings-panel.active{
+
+
+opacity:1;
+
+transform:
+
+translateY(0)
+
+scale(1);
+
+
+pointer-events:auto;
+
+
+}
+
+
+
+.setting-item{
+
+
+height:34px;
+
+display:flex;
+
+align-items:center;
+
+gap:12px;
+
+padding:0 12px;
+
+border-radius:12px;
+
+color:#e8eaed;
+
+font-size:13px;
+
+cursor:pointer;
+
+transition:.2s;
+
+
+}
+
+
+
+.setting-item:hover{
+
+
+background:#303134;
+
+
+}
+
+
+
+.setting-item i{
+
+
+font-size:18px;
+
+color:#d9d9d9;
+
+
+}
+
+
+
+.setting-item b{
+
+
+margin-left:auto;
+
+font-size:11px;
+
+background:#5f6368;
+
+padding:3px 8px;
+
+border-radius:10px;
+
+font-weight:500;
+
+}
+
+
+
+.arrow{
+
+margin-left:auto;
+
+}
+
+
+
+
+
+.theme-option{
+
+
+padding:10px;
+
+border-radius:10px;
+
+font-size:13px;
+
+}
+
+
+.theme-option:hover{
+
+
+background:#303134;
+
+}
+
+
+.side-icon::after,
+.settings::after{
+
+z-index:999;
+
+}
+/* Theme Popup */
+
+.theme-item{
+    position:relative;
+}
+
+.theme-menu{
+    position:absolute;
+    left:calc(100% + 10px);
+    top:0;
+    width:140px;
+    background:#202124;
+    border-radius:18px;
+    padding:8px;
+    box-shadow:0 15px 40px rgba(0,0,0,.6);
+    border:1px solid rgba(255,255,255,.08);
+    opacity:0;
+    visibility:hidden;
+    transform:translateX(-10px);
+    transition:.25s ease;
+    z-index:100;
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+}
+
+.theme-item:hover .theme-menu,
+.theme-item.active .theme-menu,
+.theme-menu.show{
+    opacity:1;
+    visibility:visible;
+    transform:translateX(0);
+}
+
+.theme-item{
+    position:relative;
+}
+
+
+/* Right side popup */
+.theme-menu{
+
+    position:absolute;
+    left:230px;
+    top:0;
+
+    width:150px;
+
+    background:#202124;
+
+    border-radius:18px;
+
+    padding:8px;
+
+    box-shadow:
+    0 15px 40px rgba(0,0,0,.5);
+
+    opacity:0;
+    pointer-events:none;
+
+    transform:translateX(-10px);
+
+    transition:.25s ease;
+
+}
+
+
+/* Show on hover */
+.theme-item:hover .theme-menu{
+
+    opacity:1;
+
+    pointer-events:auto;
+
+    transform:translateX(0);
+
+}
+
+
+
+.theme-option{
+
+    width:100%;
+    height:42px;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:space-between;
+
+    border:none;
+
+    background:none;
+
+    color:white;
+
+    padding:0 12px;
+
+    border-radius:12px;
+
+    cursor:pointer;
+
+    font-size:14px;
+
+}
+
+
+.theme-option:hover{
+
+    background:#303134;
+
+}
+.dropdown-icon{
+
+font-size:14px;
+margin-left:5px;
+transition:.25s;
+}
+
+
+.mode-btn:hover .dropdown-icon{
+
+transform:translateY(2px);
+
+}
+.plus-box{
+
+position:relative;
+
+}
+
+
+
+.plus{
+
+width:28px;
+height:28px;
+
+border-radius:50%;
+
+display:flex;
+align-items:center;
+justify-content:center;
+
+cursor:pointer;
+
+font-size:25px;
+
+transition:.2s;
+
+}
+
+
+.plus:hover{
+
+background:#303134;
+
+}
+
+
+
+/* upload popup */
+
+.upload-menu{
+
+position:absolute;
+
+bottom:45px;
+
+left:0;
+
+width:180px;
+
+background:#202124;
+
+border-radius:16px;
+
+padding:8px;
+
+opacity:0;
+
+pointer-events:none;
+
+transform:translateY(10px);
+
+transition:.25s;
+
+box-shadow:
+0 15px 40px rgba(0,0,0,.5);
+
+}
+
+
+
+.plus-box:hover .upload-menu{
+
+opacity:1;
+
+pointer-events:auto;
+
+transform:translateY(0);
+
+}
+
+
+
+.upload-menu div{
+
+height:42px;
+
+display:flex;
+
+align-items:center;
+
+gap:12px;
+
+padding:0 12px;
+
+border-radius:12px;
+
+cursor:pointer;
+
+font-size:14px;
+
+}
+
+
+.upload-menu div:hover{
+
+background:#303134;
+
+}
+#filePreview{
+
+display:none;
+
+background:#303134;
+
+border-radius:14px;
+
+padding:8px 12px;
+
+width:90px;
+
+height:75px;
+
+flex-direction:column;
+
+justify-content:center;
+
+font-size:12px;
+
+margin-right:10px;
+
+}
+
+
+#filePreview.show{
+
+display:flex;
+
+}
+
+
+#filePreview i{
+
+font-size:20px;
+
+margin-bottom:5px;
+
+color:#ddd;
+
+}
+
+
+.file-name{
+
+white-space:nowrap;
+
+overflow:hidden;
+
+text-overflow:ellipsis;
+
+}
+.powered-text{
+    margin-top:14px;
+    font-size:12px;
+    color:#8b8b8f;
+    letter-spacing:.3px;
+    text-align:center;
+    transition:.3s ease;
+}
+
+.powered-text span{
+    color:#8aa4ff;
+    font-weight:600;
+}
+
+
+body.light-theme .powered-text{
+    color:#777;
+}
+
+body.light-theme .powered-text span{
+    color:#3b5cff;
+}
+</style>
+</head>
+
+<body>
+
+<div class="sidebar">
+
+
+<img class="side-icon" src="shiva.png" alt="Shiva AI Logo" data-tooltip="Shiva AI">
+</img>
+
+
+<div class="side-icon" data-tooltip="New Chat">
+<i class="ph ph-pencil-simple"></i>
+</div>
+
+
+<div class="side-icon" data-tooltip="Conversations">
+<i class="ph ph-chat-circle"></i>
+</div>
+
+
+<div class="side-icon" data-tooltip="Search">
+<i class="ph ph-magnifying-glass"></i>
+</div>
+
+
+</div>
+
+<div class="container chat-container">
+
+    <div class="chat-header">
+        <h1>Shiva AI</h1>
+    </div>
+
+    <div class="messages" id="messages">
+    </div>
+
+
+    <div class="search">
+
+        <div class="plus-box">
+
+<div class="plus" id="pdfBtn">
++
+</div>
+
+
+<div class="upload-menu">
+
+<div onclick="document.getElementById('pdfInput').click()">
+
+<i class="ph ph-file-pdf"></i>
+Upload PDF
+
+</div>
+
+<div>
+
+<i class="ph ph-image"></i>
+Upload Image
+
+</div>
+
+
+</div>
+
+</div>
+<div id="filePreview"></div>
+<input 
+type="file"
+id="pdfInput"
+accept=".pdf,image/*"
+hidden>
+
+        <input 
+        id="userInput"
+        placeholder="Ask Shiva anything..."
+        autocomplete="off">
+
+        
+
+
+        <div class="model-selector">
+
+            <button class="mode-btn" id="modelBtn">
+
+<span id="selectedModel">
+1.0 Neo
+</span>
+
+<i class="ph ph-caret-down dropdown-icon"></i>
+
+</button>
+
+            <div class="model-menu" id="modelMenu">
+
+                <div class="model-item active"
+                data-model="1.0 Neo">
+
+                    <div>
+                        <h3>1.0 Neo</h3>
+                        <p>Fast responses</p>
+                    </div>
+
+                    <span class="check">✓</span>
+
+                </div>
+
+
+
+            </div>
+
+        </div>
+<button id="sendBtn">
+<i class="ph ph-paper-plane-right"></i>
+</button>
+    </div>
+<div class="powered-text">
+    Powered by <span>BOOKStore</span>
+</div>
+</div>
+
+
+<div class="settings" id="settingsBtn">
+    <i class="ph ph-gear"></i>
+</div>
+
+<div class="settings-panel" id="settingsPanel">
+
+<div class="setting-item theme-item">
+
+<i class="ph ph-sun"></i>
+
+<span>Theme</span>
+
+<i class="ph ph-caret-right arrow"></i>
+
+
+<div class="theme-menu">
+
+<button class="theme-option" onclick="setTheme('system')">
+<span>System</span>
+<span id="systemCheck">✓</span>
+</button>
+
+<button class="theme-option" onclick="setTheme('light')">
+<span>Light</span>
+<span id="lightCheck"></span>
+</button>
+
+<button class="theme-option" onclick="setTheme('dark')">
+<span>Dark</span>
+<span id="darkCheck"></span>
+</button>
+
+</div>
+
+</div>
+
+
+<div class="setting-item"
+onclick="location.href='https://bookstore-nt.vercel.app/xp-mart'">
+
+<i class="ph ph-sparkle"></i>
+
+<span>Manage subscription</span>
+
+</div>
+
+
+
+<div class="setting-item"
+onclick="location.href='https://bookstore-nt.vercel.app/support'">
+
+<i class="ph ph-chat-circle-text"></i>
+
+<span>Send feedback</span>
+
+</div>
+
+</div>
+<script type="module">
+
+import { initializeApp } 
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
+import { getDatabase, ref, push, set, onValue }
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+
+
+const firebaseConfig = {
+
+apiKey:"AIzaSyDOsmIaQDyq80tR4IjEwXN7FUpJJIfe_Uo",
+
+authDomain:"shiva-ai-bookstore.firebaseapp.com",
+
+projectId:"shiva-ai-bookstore",
+
+storageBucket:"shiva-ai-bookstore",
+
+messagingSenderId:"6168701703",
+
+appId:"1:6168701703:web:1857ab684b92a3e76bb3a2"
+
+};
+
+
+
+const app =
+initializeApp(firebaseConfig);
+
+
+const database =
+getDatabase(app);
+
+
+
+window.database =
+database;
+
+window.firebaseRef =
+ref;
+
+window.firebasePush =
+push;
+
+window.firebaseSet =
+set;
+
+window.firebaseOnValue =
+onValue;
+
+
+</script>
+<script>
+// Logic for Model Selector Menu
+const modelBtn = document.getElementById("modelBtn");
+const modelMenu = document.getElementById("modelMenu");
+const selectedModel = document.getElementById("selectedModel");
+const models = document.querySelectorAll(".model-item");
+
+// Open / Close dropdown
+modelBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    modelMenu.classList.toggle("show");
+});
+
+// Select model
+models.forEach(model => {
+    model.addEventListener("click", () => {
+        let name = model.dataset.model;
+        selectedModel.textContent = name;
+        models.forEach(item => item.classList.remove("active"));
+        model.classList.add("active");
+        modelMenu.classList.remove("show");
+    });
+});
+
+
+// Logic for Settings Panel
+const settingsBtn = document.getElementById("settingsBtn");
+const settingsPanel = document.getElementById("settingsPanel");
+
+// Open/Close settings
+settingsBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    settingsPanel.classList.toggle("active");
+});
+
+// Close menus when clicking outside
+document.addEventListener("click", (e) => {
+    // Check outside model selector
+    if(!modelBtn.contains(e.target) && !modelMenu.contains(e.target)){
+        modelMenu.classList.remove("show");
+    }
+    
+    // Check outside settings panel
+    if(!settingsPanel.contains(e.target) && !settingsBtn.contains(e.target)){
+        settingsPanel.classList.remove("active");
+    }
+});
+
+
+function setTheme(mode){
+
+    localStorage.setItem("shiva-theme",mode);
+
+
+    if(mode==="light"){
+
+        document.body.classList.add("light-theme");
+
+    }
+    else{
+
+        document.body.classList.remove("light-theme");
+
+    }
+
+
+    updateThemeCheck(mode);
+
+}
+
+
+
+function updateThemeCheck(mode){
+
+    document.getElementById("systemCheck").innerHTML="";
+    document.getElementById("lightCheck").innerHTML="";
+    document.getElementById("darkCheck").innerHTML="";
+
+
+    if(mode==="light")
+        document.getElementById("lightCheck").innerHTML="✓";
+
+
+    else if(mode==="dark")
+        document.getElementById("darkCheck").innerHTML="✓";
+
+
+    else
+        document.getElementById("systemCheck").innerHTML="✓";
+
+}
+
+
+
+window.onload=()=>{
+
+let saved =
+localStorage.getItem("shiva-theme") || "system";
+
+
+setTheme(saved);
+
+};
+const input=document.getElementById("userInput");
+const send=document.getElementById("sendBtn");
+const messages=document.getElementById("messages");
+let uploadedFile = null;
+let uploadedFileType = null;
+
+function addMessage(text,type){
+
+    document
+    .querySelector(".container")
+    .classList.add("has-chat");
+
+
+    let div=document.createElement("div");
+
+    div.className=
+    "message "+type+"-message";
+
+
+    div.innerHTML =
+    type==="ai"
+    ? marked.parse(text)
+    : text;
+
+
+    messages.appendChild(div);
+
+
+    messages.scrollTop=
+    messages.scrollHeight;
+
+}
+
+
+async function sendMessage(){
+
+let text=input.value.trim();
+
+if(!text)return;
+
+
+addMessage(text,"user");
+saveChat(
+"user",
+text
+);
+function saveChat(role,message){
+
+
+const chatRef =
+firebasePush(
+firebaseRef(database,"chats")
+);
+
+
+firebaseSet(chatRef,{
+
+role:role,
+
+message:message,
+
+time:
+Date.now()
+
+});
+
+
+}
+input.value="";
+
+
+let typing=document.createElement("div");
+
+typing.className="message ai-message typing";
+
+typing.innerHTML=
+"Shiva AI is typing<span class='dots'>...</span>";
+
+messages.appendChild(typing);
+
+
+
+try{
+
+
+const response =
+await fetch(
+"http://localhost:3000/chat",
+{
+
+method:"POST",
+
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+
+message:text,
+
+hasFile: uploadedFile ? true : false,
+
+fileType: uploadedFileType,
+
+fileName: uploadedFile ? uploadedFile.name : null
+
+})
+
+});
+
+typing.remove();
+
+
+let aiDiv=document.createElement("div");
+
+aiDiv.className=
+"message ai-message";
+
+
+messages.appendChild(aiDiv);
+
+
+
+const reader =
+response.body.getReader();
+
+
+const decoder =
+new TextDecoder();
+
+
+
+while(true){
+
+const {done,value}
+=
+await reader.read();
+
+
+if(done)
+break;
+
+
+const text =
+decoder.decode(value);
+
+
+aiDiv.innerHTML +=
+marked.parse(text);
+saveChat(
+"assistant",
+aiDiv.innerText
+);
+
+messages.scrollTop=
+messages.scrollHeight;
+
+}
+function loadChats(){
+
+
+const chatRef =
+firebaseRef(
+database,
+"chats"
+);
+
+
+
+firebaseOnValue(
+chatRef,
+(snapshot)=>{
+
+
+messages.innerHTML="";
+
+
+snapshot.forEach(item=>{
+
+
+const data=item.val();
+
+
+addMessage(
+data.message,
+data.role==="user"
+?"user"
+:"ai"
+);
+
+
+});
+
+
+});
+
+
+}
+
+
+
+loadChats();
+
+
+}catch(error){
+
+
+typing.remove();
+
+
+addMessage(
+"Server connection failed.",
+"ai"
+);
+
+
+}
+
+
+
+}
+
+
+send.onclick=sendMessage;
+const pdfBtn=
+document.getElementById("pdfBtn");
+
+const pdfInput=
+document.getElementById("pdfInput");
+
+
+pdfBtn.onclick=()=>{
+
+pdfInput.click();
+
+};
+
+
+pdfInput.onchange=async()=>{
+
+const file =
+pdfInput.files[0];
+
+if(!file)return;
+
+
+uploadedFile=file;
+
+uploadedFileType="pdf";
+
+let preview =
+document.getElementById("filePreview");
+
+
+preview.innerHTML=
+`
+
+<i class="${
+file.type.startsWith("image")
+?"ph ph-image"
+:"ph ph-file-pdf"
+}"></i>
+
+
+<span class="file-name">
+${file.name}
+</span>
+
+`;
+
+
+preview.classList.add("show");
+
+
+
+let form=new FormData();
+
+form.append("pdf",file);
+
+
+
+const response=
+await fetch(
+"http://localhost:3000/upload-pdf",
+{
+method:"POST",
+body:form
+}
+);
+
+
+
+const data=
+await response.json();
+
+
+addMessage(
+"📚 "+data.message,
+"ai"
+);
+
+
+};
+input.addEventListener(
+"keydown",
+(e)=>{
+
+if(e.key==="Enter"){
+sendMessage();
+}
+
+});
+
+</script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</body>
+</html>
