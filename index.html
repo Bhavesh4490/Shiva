@@ -1813,7 +1813,7 @@ form.append("pdf",file);
 
 const response=
 await fetch(
-"api/upload-pdf",
+"/api/upload-pdf", // <-- Add the forward slash
 {
 method:"POST",
 body:form
