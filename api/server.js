@@ -1,5 +1,5 @@
 const multer=require("multer");
-const pdfParse=require("pdf-parse");
+const pdf = require("pdf-parse/lib/pdf-parse");
 
 const upload=multer({
 storage:multer.memoryStorage()
